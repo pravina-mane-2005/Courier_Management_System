@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Courier Info</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+.dashboard { display: flex; min-height: 100vh; }
+.sidebar { width: 250px; background-color: #0d6efd; color: #fff; padding: 2rem 1rem; }
+.sidebar h4 { color: #fff; margin-bottom: 2rem; }
+.sidebar .nav-link { color: #cce5ff; margin-bottom: 0.5rem; font-weight: 500; }
+.sidebar .nav-link.active, .sidebar .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.2); border-radius: 5px; }
+.content { flex: 1; padding: 2rem; }
+
+/* Table Styling */
+table { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%; border-collapse: collapse; }
+thead { background-color: #0d6efd; color: #fff; font-weight: 600; }
+thead th, tbody td { text-align: center; padding: 12px; border: 1px solid #dee2e6; }
+tbody tr:nth-child(even) { background-color: #f1f3f5; }
+tbody tr:hover { background-color: #e2e6ea; transition: 0.2s; }
+
+/* Status badges */
+.status-booked { background-color: #ffc107; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+.status-in-transit { background-color: #17a2b8; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+.status-delivered { background-color: #28a745; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h4>Courier Info</h4>
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link active" href="#">All Couriers</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Book Courier</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <h3>Customer Courier Information</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer</th>
+          <th>Tracking Number</th>
+          <th>Receiver</th>
+          <th>Status</th>
+          <th>Latest Location</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="courier-table">
+        <tr><td colspan="7">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const customerId = localStorage.getItem("userId");
+const baseURL = "http://localhost:8085/api/couriers/all";
+const tbody = document.getElementById("courier-table");
+
+function loadCouriers() {
+  tbody.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
+
+  fetch(baseURL)
+    .then(res => res.json())
+    .then(couriers => {
+      tbody.innerHTML = "";
+
+      if (!couriers || couriers.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='7'>No Couriers Found</td></tr>";
+        return;
+      }
+
+      couriers.forEach(c => {
+        // Status badge
+        let statusClass = "status-booked";
+        if (c.status.toLowerCase() === "in-transit") statusClass = "status-in-transit";
+        else if (c.status.toLowerCase() === "delivered") statusClass = "status-delivered";
+
+        // Latest location: sort by updatedAt to get last
+        let latestLocation = "-";
+        if(c.courierTrackings && c.courierTrackings.length > 0){
+            const sorted = c.courierTrackings.sort((a,b)=> new Date(a.updatedAt) - new Date(b.updatedAt));
+            latestLocation = sorted[sorted.length-1].location;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${c.id}</td>
+            <td>${c.sender ? c.sender.name : "N/A"}</td>
+            <td>${c.trackingNumber || "N/A"}</td>
+            <td>${c.receiverName || "N/A"}</td>
+            <td><span class="${statusClass}">${c.status}</span></td>
+            <td>${latestLocation}</td>
+            <td>${new Date(c.createdAt).toLocaleString()}</td>
+          </tr>
+        `;
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      tbody.innerHTML = "<tr><td colspan='7'>Error loading data</td></tr>";
+    });
+}
+
+// Initial load
+loadCouriers();
+
+// Auto-refresh every 10s for real-time tracking
+setInterval(loadCouriers, 10000);
+</script>
+
+</body>
+</html>

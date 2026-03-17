@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Couriers</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+  .dashboard { display: flex; min-height: 100vh; }
+  .sidebar { width: 250px; background-color: #0d6efd; color: #fff; padding: 2rem 1rem; }
+  .sidebar h4 { color: #fff; margin-bottom: 2rem; }
+  .sidebar .nav-link { color: #cce5ff; margin-bottom: 0.5rem; font-weight: 500; }
+  .sidebar .nav-link.active, .sidebar .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.2); border-radius: 5px; }
+  .content { flex: 1; padding: 2rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse; /* lines properly join hotil */
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #dee2e6; /* table border */
+}
+
+thead th, tbody td {
+  border: 1px solid #dee2e6; /* cell lines */
+  text-align: center;
+  padding: 12px;
+}
+  /* Status badges */
+  .status-booked { background-color: #ffc107; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+  .status-in-transit { background-color: #17a2b8; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+  .status-delivered { background-color: #28a745; color: #fff; padding: 5px 10px; border-radius: 12px; font-weight: 500; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .dashboard { flex-direction: column; }
+    .sidebar { width: 100%; }
+    table, thead, tbody, th, td, tr { display: block; }
+    thead tr { display: none; }
+    tbody td { text-align: right; padding-left: 50%; position: relative; }
+    tbody td::before { content: attr(data-label); position: absolute; left: 15px; width: 45%; font-weight: 600; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h4>Customer Panel</h4>
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link active" href="my-couriers.html">My Couriers</a></li>
+      <li class="nav-item"><a class="nav-link" href="track-courier.html">Track Courier</a></li>
+      <li class="nav-item"><a class="nav-link" href="book-courier.html">Book Courier</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <h3 class="mb-4">My Couriers</h3>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tracking Number</th>
+          <th>Receiver</th>
+          <th>Status</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="my-couriers-table">
+        <tr><td colspan="5">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const customerId = localStorage.getItem("userId");
+const tbody = document.getElementById("my-couriers-table");
+
+if(!customerId){
+    alert("Please login first");
+    window.location.href="login.html";
+}
+
+function loadMyCouriers() {
+    tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+    fetch(`http://localhost:8085/api/couriers/my/${customerId}`)
+    .then(res => res.json())
+    .then(couriers => {
+        tbody.innerHTML = "";
+
+        if(couriers.length === 0){
+            tbody.innerHTML = "<tr><td colspan='5'>No Couriers Found</td></tr>";
+            return;
+        }
+
+        couriers.forEach(c => {
+            // Status badge logic
+            let statusClass = "status-booked";
+            if(c.status.toLowerCase() === "in-transit") statusClass = "status-in-transit";
+            else if(c.status.toLowerCase() === "delivered") statusClass = "status-delivered";
+
+            tbody.innerHTML += `
+            <tr>
+                <td data-label="ID">${c.id}</td>
+                <td data-label="Tracking Number">${c.trackingNumber ? c.trackingNumber : "N/A"}</td>
+                <td data-label="Receiver">${c.receiverName}</td>
+                <td data-label="Status"><span class="${statusClass}">${c.status}</span></td>
+                <td data-label="Created At">${new Date(c.createdAt).toLocaleString()}</td>
+            </tr>`;
+        });
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        tbody.innerHTML = "<tr><td colspan='5'>Error loading data</td></tr>";
+    });
+}
+
+// Initial load
+loadMyCouriers();
+setInterval(loadMyCouriers, 10000);
+</script>
+
+</body>
+</html>

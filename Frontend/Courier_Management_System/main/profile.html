@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courier Management Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Poppins', sans-serif; }
+body { background:#e5eaf5; padding:20px; }
+
+/* Container */
+.container { max-width: 1200px; margin:auto; }
+
+/* Header / Profile Card */
+.profile-card {
+    background:linear-gradient(135deg,#4facfe,#00f2fe);
+    color:white;
+    border-radius:12px;
+    padding:30px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    margin-bottom:30px;
+}
+.profile-card img { width:100px; height:100px; border-radius:50%; border:3px solid white; }
+.profile-info h2 { font-size:24px; margin-bottom:5px; }
+.profile-info p { font-size:16px; }
+.edit-btn {
+    margin-left:auto;
+    padding:8px 16px;
+    background:#fff;
+    color:#4facfe;
+    border:none;
+    border-radius:8px;
+    font-weight:500;
+    cursor:pointer;
+    transition:0.3s;
+}
+.edit-btn:hover { background:#f0f0f0; }
+
+/* Stats */
+.stats { display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap; }
+.stat-card {
+    flex:1; min-width:150px;
+    padding:20px;
+    border-radius:12px;
+    color:white;
+    text-align:center;
+    box-shadow:0 5px 15px rgba(0,0,0,0.05);
+    cursor:pointer;
+    transition:0.3s;
+}
+.stat-card h3 { font-size:28px; margin-bottom:5px; }
+.stat-card p { font-size:14px; opacity:0.9; }
+
+/* Gradient colors for stats */
+#totalCouriers { background:linear-gradient(45deg,#ff6b6b,#f94d6a); padding:20px; border-radius:12px; }
+#delivered { background:linear-gradient(45deg,#1dd1a1,#10ac84); padding:20px; border-radius:12px; }
+#inProgress { background:linear-gradient(45deg,#54a0ff,#2e86de); padding:20px; border-radius:12px; }
+#pending { background:linear-gradient(45deg,#feca57,#ff9f43); padding:20px; border-radius:12px; }
+
+/* Table */
+.table-container { background:white; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
+.table-container table { width:100%; border-collapse:collapse; }
+.table-container th, .table-container td { padding:12px; text-align:left; border-bottom:1px solid #eee; }
+.table-container th { background:#f7f8fa; font-weight:600; cursor:pointer; }
+.table-container tr:hover { background:#f1f4ff; transition:0.2s; }
+#searchInput { margin-bottom:10px; padding:8px; width:100%; border-radius:6px; border:1px solid #ccc; }
+
+/* Responsive */
+@media(max-width:900px){
+    .profile-card { flex-direction:column; text-align:center; }
+    .edit-btn { margin-left:0; margin-top:10px; }
+    .stats { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header Card -->
+    <div class="profile-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="Courier">
+        <div class="profile-info">
+            <h2>Courier Management System</h2>
+            <p>System Overview</p>
+        </div>
+        <button class="edit-btn" onclick="loadDashboard()">Refresh Data</button>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats">
+        <div class="stat-card" id="totalCouriers">0<p>Total Couriers</p></div>
+        <div class="stat-card" id="delivered">0<p>Delivered</p></div>
+        <div class="stat-card" id="inProgress">0<p>In Progress</p></div>
+        <div class="stat-card" id="pending">0<p>Pending</p></div>
+    </div>
+
+    <!-- Recent Activity Table -->
+    <div class="table-container">
+        <h3>Recent Courier Activity</h3>
+        <input type="text" id="searchInput" placeholder="Search by Tracking / Sender / Receiver">
+        <table id="courierTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Tracking Number </th>
+                    <th onclick="sortTable(1)">Sender </th>
+                    <th onclick="sortTable(2)">Receiver </th>
+                    <th onclick="sortTable(3)">Status </th>
+                    <th onclick="sortTable(4)">Date </th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Filled dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+const API_BASE = "http://localhost:8085/api/couriers";
+
+async function loadDashboard() {
+    try {
+
+        const couriersRes = await fetch(`${API_BASE}/all`);
+        const couriers = await couriersRes.json();
+
+        /* counts */
+
+        let total = couriers.length;
+        let delivered = 0;
+        let pending = 0;
+        let inProgress = 0;
+
+        couriers.forEach(c => {
+
+            if(c.status === "Delivered") delivered++;
+
+            else if(c.status === "Pending") pending++;
+
+            else if(c.status === "In Progress") inProgress++;
+
+        });
+
+        document.getElementById('totalCouriers').innerHTML = `${total}<p>Total Couriers</p>`;
+        document.getElementById('delivered').innerHTML = `${delivered}<p>Delivered</p>`;
+        document.getElementById('inProgress').innerHTML = `${inProgress}<p>In Progress</p>`;
+        document.getElementById('pending').innerHTML = `${pending}<p>Pending</p>`;
+
+
+        /* table */
+
+        const tbody = document.querySelector('#courierTable tbody');
+        tbody.innerHTML = '';
+
+        couriers.slice(0,10).forEach(c => {
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>${c.trackingNumber || '-'}</td>
+                <td>${c.sender ? c.sender.name : 'N/A'}</td>
+                <td>${c.receiverName || '-'}</td>
+                <td>${c.status || '-'}</td>
+                <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '-'}</td>
+            `;
+
+            tbody.appendChild(tr);
+
+        });
+
+    } catch (err) {
+
+        console.error("Dashboard load error:", err);
+
+    }
+}
+
+/* search */
+
+document.getElementById('searchInput').addEventListener('keyup', function() {
+
+    const filter = this.value.toLowerCase();
+
+    const rows = document.querySelectorAll('#courierTable tbody tr');
+
+    rows.forEach(row => {
+
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+
+    });
+
+});
+
+
+window.onload = loadDashboard;
+</script>
+
+</body>
+</html>

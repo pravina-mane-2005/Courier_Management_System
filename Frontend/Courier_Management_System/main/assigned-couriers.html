@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigned Couriers</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+  background-color: #f0f2f5;
+  margin: 0;
+}
+
+.d-flex { min-height: 100vh; }
+
+.sidebar{
+width:240px;
+background:#0d6efd;
+color:white;
+min-height:100vh;
+padding:20px;
+box-shadow:2px 0 8px rgba(0,0,0,0.1);
+}
+
+.sidebar h4{
+margin-bottom:30px;
+font-weight:600;
+}
+
+.sidebar a{
+display:block;
+color:white;
+padding:10px 12px;
+text-decoration:none;
+border-radius:6px;
+margin-bottom:8px;
+transition:0.3s;
+}
+
+.sidebar a:hover{
+background:#0b5ed7;
+}
+
+.sidebar .active{
+background:#084298;
+}
+
+.table-container { flex: 1; padding: 2rem; }
+
+.table-wrapper {
+background:#fff;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+padding:1rem;
+}
+
+thead{
+background:#0d6efd;
+color:#fff;
+}
+
+thead th{
+text-align:center;
+padding:12px;
+font-weight:600;
+}
+
+tbody td{
+text-align:center;
+padding:12px;
+}
+
+tbody tr:nth-child(even){
+background:#f8f9fa;
+}
+
+tbody tr:hover{
+background:#e9ecef;
+}
+
+.badge-staff{
+background:#6f42c1;
+color:white;
+padding:5px 10px;
+border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="d-flex">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+<h4>Staff Panel</h4>
+
+<ul class="nav flex-column">
+
+<li class="nav-item">
+<a class="nav-link active" href="assigned-couriers.html">
+Assigned Couriers
+</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="update-status.html">
+Update Status
+</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="delivery-history.html">
+Delivery History
+</a>
+</li>
+
+</ul>
+</div>
+
+
+<!-- Main Content -->
+
+<div class="table-container">
+
+<h3 class="mb-4">Assigned Couriers</h3>
+
+<div class="table-wrapper">
+
+<table class="table">
+
+<thead>
+<tr>
+<th>Tracking No</th>
+<th>Sender</th>
+<th>Receiver</th>
+<th>Status</th>
+<th>Assigned Staff</th>
+</tr>
+</thead>
+
+<tbody id="assigned-table">
+<tr><td colspan="5">Loading...</td></tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const API="http://localhost:8085/api/couriers/all";
+
+function loadAssignedCouriers(){
+
+fetch(API)
+
+.then(res=>res.json())
+
+.then(couriers=>{
+
+const tbody=document.getElementById("assigned-table");
+
+tbody.innerHTML="";
+
+/* only assigned staff couriers */
+
+const assigned=couriers.filter(c=>c.staff!=null);
+
+if(assigned.length===0){
+
+tbody.innerHTML="<tr><td colspan='5'>No Assigned Couriers</td></tr>";
+
+return;
+
+}
+
+assigned.forEach(c=>{
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${c.trackingNumber}</td>
+
+<td>${c.sender ? c.sender.name : "-"}</td>
+
+<td>${c.receiverName}</td>
+
+<td>${c.status}</td>
+
+<td>
+<span class="badge-staff">
+${c.staff.name}
+</span>
+</td>
+
+</tr>
+
+`;
+
+});
+
+})
+
+.catch(err=>{
+
+console.error(err);
+
+document.getElementById("assigned-table").innerHTML="<tr><td colspan='5'>Error loading data</td></tr>";
+
+});
+
+}
+
+/* first load */
+
+loadAssignedCouriers();
+
+/* auto refresh every 5 sec */
+
+setInterval(loadAssignedCouriers,5000);
+
+</script>
+
+</body>
+</html>

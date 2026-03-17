@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery History</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f0f2f5;
+margin:0;
+}
+
+.d-flex{
+min-height:100vh;
+}
+
+.sidebar{
+width:240px;
+background:#0d6efd;
+color:white;
+padding:20px;
+}
+
+.sidebar h4{
+margin-bottom:30px;
+}
+
+.sidebar a{
+display:block;
+color:white;
+padding:10px;
+text-decoration:none;
+border-radius:6px;
+margin-bottom:8px;
+}
+
+.sidebar a:hover{
+background:#0b5ed7;
+}
+
+.sidebar .active{
+background:#084298;
+}
+
+.content{
+flex:1;
+padding:40px;
+}
+
+.table-box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="d-flex">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<h4>Staff Panel</h4>
+
+<a href="assigned-couriers.html">Assigned Couriers</a>
+<a href="update-status.html">Update Status</a>
+<a class="active" href="delivery-history.html">Delivery History</a>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="content">
+
+<h3 class="mb-4">Delivery History</h3>
+
+<div class="table-box">
+
+<table class="table table-striped">
+
+<thead>
+
+<tr>
+<th>Tracking No</th>
+<th>Sender</th>
+<th>Receiver</th>
+<th>Status</th>
+<th>Staff</th>
+</tr>
+
+</thead>
+
+<tbody id="history-table">
+
+<tr>
+<td colspan="5">Loading...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const API="http://localhost:8085/api/couriers/all";
+
+function loadHistory(){
+
+fetch(API)
+
+.then(res=>res.json())
+
+.then(couriers=>{
+
+const tbody=document.getElementById("history-table");
+
+tbody.innerHTML="";
+
+/* only delivered couriers */
+
+const delivered=couriers.filter(c=>c.status==="Delivered");
+
+if(delivered.length===0){
+
+tbody.innerHTML="<tr><td colspan='5'>No Delivered Couriers</td></tr>";
+
+return;
+
+}
+
+delivered.forEach(c=>{
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${c.trackingNumber}</td>
+
+<td>${c.sender ? c.sender.name : "-"}</td>
+
+<td>${c.receiverName}</td>
+
+<td>${c.status}</td>
+
+<td>${c.staff ? c.staff.name : "-"}</td>
+
+</tr>
+
+`;
+
+});
+
+})
+
+.catch(err=>{
+
+console.error(err);
+
+document.getElementById("history-table").innerHTML="<tr><td colspan='5'>Error loading data</td></tr>";
+
+});
+
+}
+
+loadHistory();
+
+setInterval(loadHistory,5000);
+
+</script>
+
+</body>
+</html>
