@@ -4,6 +4,7 @@
 
 The Courier Management System is a web-based application that helps manage courier operations such as booking, tracking, and delivery updates. It improves efficiency and reduces manual work.
 
+---
 
 ## 🛠️ Technologies Used
 
@@ -13,6 +14,8 @@ The Courier Management System is a web-based application that helps manage couri
 * HTML, CSS, JavaScript
 * Bootstrap
 
+---
+
 ## ✨ Features
 
 * 📦 Add Courier
@@ -21,14 +24,19 @@ The Courier Management System is a web-based application that helps manage couri
 * ❌ Delete Courier
 * 📋 View All Couriers
 
+---
+
 ## 🗄️ Database Details
 
-* Database: MySQL
-* Tables:
+* **Database:** MySQL
 
-  * Courier
-  * Customer
-  * DeliveryStatus
+**Tables:**
+
+* Courier
+* Customer
+* DeliveryStatus
+
+---
 
 ## ▶️ How to Run the Project
 
@@ -53,18 +61,24 @@ git clone https://github.com/pravina-mane-2005/Courier_Management_System.git
 
 ### 5. Open in Browser
 
+```
 http://localhost:8085/
+```
+
+---
 
 ## 📸 Screenshots
 
-(Add screenshots here)
+*(Add screenshots here)*
+
+---
 
 ## 👩‍💻 Author
 
 **Pravina Mane**
 
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License.
-
