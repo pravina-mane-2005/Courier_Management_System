@@ -21,6 +21,7 @@ The Courier Management System is a web-based application that helps manage couri
 * 📦 Add Courier
 * 🔍 Track Courier
 * ✏️ Update Delivery Status
+* ✏️ Maintain Delivery Staff
 * ❌ Delete Courier
 * 📋 View All Couriers
 
